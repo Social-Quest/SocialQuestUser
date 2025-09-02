@@ -40,3 +40,47 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Tableau container scaling styles */
+.tableau-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.tableau-container > div {
+  /* Ensure Tableau content scales properly */
+  transform-origin: top left;
+}
+
+/* Additional Tableau-specific optimizations */
+.tableau-container iframe {
+  border: none;
+  outline: none;
+}
+
+/* Zoom controls positioning */
+.tableau-zoom-controls {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+/* Ensure Tableau content doesn't interfere with controls */
+.tableau-container {
+  pointer-events: auto;
+}
+
+/* Floating show button when zoom controls are hidden */
+.zoom-show-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  transition: all 0.2s ease-in-out;
+}
+
+.zoom-show-button:hover {
+  transform: scale(1.05);
+}

@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { BarChart3, ExternalLink, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTableauZoom } from "@/hooks/useTableauZoom";
+import { TableauZoomControls } from "./TableauZoomControls";
 
 declare global {
   interface Window {
@@ -24,9 +26,27 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [key, setKey] = useState(0);
+  const [zoomControlsVisible, setZoomControlsVisible] = useState(true);
   const { toast } = useToast();
   const vizContainerRef = useRef<HTMLDivElement>(null);
   const vizRef = useRef<any>(null);
+
+  // Use the Tableau zoom hook
+  const { 
+    isTableauContent, 
+    getScalingStyle, 
+    detectTableauContent,
+    currentScale,
+    updateZoom,
+    resetZoom
+  } = useTableauZoom({
+    defaultScale: 0.65, // 65% zoom level
+    enableAutoZoom: true
+  });
+
+  const toggleZoomControlsVisibility = () => {
+    setZoomControlsVisible(!zoomControlsVisible);
+  };
 
   const getTableauEmbedUrl = (url: string) => {
     try {
@@ -58,10 +78,14 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
 
   useEffect(() => {
     if (!selectedContent) return;
+    
+    // Detect if this is Tableau content and update zoom accordingly
+    detectTableauContent(selectedContent.url);
+    
     setIsLoading(true);
     setHasError(false);
 
-    if (selectedContent.url.includes("tableau.com")) {
+    if (isTableauContent) {
       // Clean up previous viz if it exists
       if (vizRef.current) {
         vizRef.current.dispose();
@@ -211,8 +235,26 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
               </div>
             ) : (
               <div className="h-full w-full">
-                {selectedContent.url.includes("tableau.com") ? (
-                  <div ref={vizContainerRef} className="w-full h-full" />
+                {isTableauContent ? (
+                  <>
+                    {/* Zoom Controls - positioned at top right */}
+                    <div className="absolute top-4 right-4 z-20">
+                      <TableauZoomControls
+                        currentScale={currentScale}
+                        onZoomChange={updateZoom}
+                        onReset={resetZoom}
+                        isVisible={zoomControlsVisible}
+                        onToggleVisibility={toggleZoomControlsVisibility}
+                      />
+                    </div>
+                    
+                    {/* Tableau Container */}
+                    <div 
+                      ref={vizContainerRef} 
+                      className="w-full h-full tableau-container"
+                      style={getScalingStyle()}
+                    />
+                  </>
                 ) : (
                   <iframe
                     key={key}
